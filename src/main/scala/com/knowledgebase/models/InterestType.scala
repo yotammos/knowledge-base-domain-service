@@ -6,8 +6,8 @@ case object StockInterestType extends InterestType
 case object InfoInterestType extends InterestType
 
 object InterestType {
-  private val STOCK_INTEREST_TYPE = "STOCK"
-  private val INFO_INTEREST_TYPE = "INFO"
+  private val STOCK_INTEREST_TYPE = "StockInterestType"
+  private val INFO_INTEREST_TYPE = "InfoInterestType"
 
   def fromName(name: String): InterestType = name match {
     case STOCK_INTEREST_TYPE => StockInterestType

@@ -41,9 +41,11 @@ class KnowledgeBaseDomainService extends KnowledgeBaseService[Future] {
       )
   }
 
-  override def getInterests(request: GetInterestsRequest): Future[GetInterestsResponse] =
+  override def getInterests(request: GetInterestsRequest): Future[GetInterestsResponse] = {
+    println(s"getting interests for user, userId = ${request.userId.value}")
     context.knowledgeBaseDao.getInterestsByUserId(request.userId) flatMap { interests =>
         val interestsWithResources = Future collect interests.map { interest =>
+          print(s"fetching interest = $interest")
           interest.interestType match {
             case StockInterestType =>
               context.stockInfoHttpClient.getStockData(interest.name)
@@ -72,6 +74,7 @@ class KnowledgeBaseDomainService extends KnowledgeBaseService[Future] {
           }
         }
 
+      println(s"returning interests = $interests")
       interestsWithResources.map(interests =>
         GetInterestsResponse(
         isSuccess = true,
@@ -80,4 +83,5 @@ class KnowledgeBaseDomainService extends KnowledgeBaseService[Future] {
         )
       )
     }
+  }
 }
