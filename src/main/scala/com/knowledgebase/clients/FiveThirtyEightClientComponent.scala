@@ -1,7 +1,7 @@
 package com.knowledgebase.clients
 
 import com.knowledgebase.thrift.{PollEntry, PollResource}
-import com.knowledgebase.utils.Defaults.{FTE_HOST, FTE_PORT}
+import com.knowledgebase.utils.Defaults.{FTE_HOST, FTE_PORT, POLLS_PAGE, POLLS_PRESIDENT_PRIMARY}
 import com.twitter.finagle.{Http, Service}
 import com.twitter.finagle.http.{Method, Request, Response, Status}
 import com.twitter.util.Future
@@ -15,11 +15,11 @@ trait FiveThirtyEightClientComponent {
     private val client: Service[Request, Response] = Http.client.withTls(host) newService s"$host:$FTE_PORT"
 
     def fetchPresidentPrimaryPollingData(): Future[Seq[PollResource]] =
-      fetchPollingData("president_primary_polls.csv")
+      fetchPollingData(POLLS_PRESIDENT_PRIMARY)
 
     private def fetchPollingData(fileName: String): Future[Seq[PollResource]] =
       client(
-        Request(Method.Get, s"polls-page/$fileName")
+        Request(Method.Get, s"/$POLLS_PAGE/$fileName")
       ) map { response =>
         if (response.status == Status.Ok) {
           buildPollingResources(response.getContentString())
