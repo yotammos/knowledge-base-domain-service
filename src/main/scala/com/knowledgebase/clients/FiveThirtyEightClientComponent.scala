@@ -8,16 +8,14 @@ import com.twitter.util.Future
 
 trait FiveThirtyEightClientComponent {
 
-  def fiveThirtyEightClient = new FiveThirtyEightClient
+  def fiveThirtyEightClient: FiveThirtyEightClient
 
   class FiveThirtyEightClient {
-    val baseUrl = "https://projects.fivethirtyeight.com/polls-page/"
     private val host = FTE_HOST
     private val client: Service[Request, Response] = Http.client.withTls(host) newService s"$host:$FTE_PORT"
 
     def fetchPresidentPrimaryPollingData(): Future[Seq[PollResource]] =
       fetchPollingData("president_primary_polls.csv")
-
 
     private def fetchPollingData(fileName: String): Future[Seq[PollResource]] =
       client(
@@ -42,7 +40,7 @@ trait FiveThirtyEightClientComponent {
       rawPolls.map(rawPoll => buildPollResource(rawPoll, colMap))
     }
 
-    def buildPollResource(rawResource: Array[Array[String]], colMap: ColMap): PollResource = {
+    private def buildPollResource(rawResource: Array[Array[String]], colMap: ColMap): PollResource = {
       val firstLine = rawResource.head
       PollResource(
         cycle = firstLine(colMap.cycle).toInt,
@@ -68,7 +66,7 @@ trait FiveThirtyEightClientComponent {
       )
     }
 
-    case class ColMap(cycle: Int, pollster: Int, fteGrade: Int, sampleSize: Int, officeType: Int, startDate: Int, endDate: Int, stage: Int, party: Int, candidate: Int, percentage: Int, state: Int, questionId: Int)
+    private case class ColMap(cycle: Int, pollster: Int, fteGrade: Int, sampleSize: Int, officeType: Int, startDate: Int, endDate: Int, stage: Int, party: Int, candidate: Int, percentage: Int, state: Int, questionId: Int)
 
     private def buildColMap(header: Array[String]) = ColMap(
       cycle = header indexOf "cycle",

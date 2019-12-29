@@ -1,12 +1,13 @@
 package com.knowledgebase.config
 
-import com.knowledgebase.clients.StockInfoHttpClientComponent
+import com.knowledgebase.clients.{FiveThirtyEightClientComponent, StockInfoHttpClientComponent}
 import com.knowledgebase.dao.KnowledgeBaseDaoComponent
-import com.knowledgebase.utils.Defaults.{ DB_PASSWORD, DB_PORT, DB_USERNAME, STOCK_API_KEY }
+import com.knowledgebase.utils.Defaults.{DB_PASSWORD, DB_PORT, DB_USERNAME, STOCK_API_KEY}
 
 class ComponentProvider
   extends KnowledgeBaseDaoComponent
-  with StockInfoHttpClientComponent {
+  with StockInfoHttpClientComponent
+  with FiveThirtyEightClientComponent {
 
   lazy val knowledgeBaseDao: KnowledgeBaseDao = new KnowledgeBaseDao(
     database = "knowledge_base",
@@ -17,4 +18,5 @@ class ComponentProvider
   )
 
   lazy val stockInfoHttpClient: StockInfoHttpClient = new StockInfoHttpClient(STOCK_API_KEY)
+  lazy val fiveThirtyEightClient: FiveThirtyEightClient = new FiveThirtyEightClient
 }

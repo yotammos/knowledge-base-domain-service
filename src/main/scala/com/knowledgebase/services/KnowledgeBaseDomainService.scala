@@ -3,19 +3,8 @@ package com.knowledgebase.services
 import java.sql.Timestamp
 
 import com.knowledgebase.config.ComponentProvider
-import com.knowledgebase.models.{InfoInterestType, Interest, InterestType, StockInterestType}
-import com.knowledgebase.thrift.{
-  AddInterestsRequest,
-  GetInterestsRequest,
-  GetInterestsResponse,
-  InfoResource,
-  StockResource,
-  KnowledgeBaseService,
-  Resource,
-  SimpleResponse,
-  Interest => ThriftInterest,
-  InterestType => ThriftInterestType
-}
+import com.knowledgebase.models.{InfoInterestType, Interest, InterestType, PollInterestType, StockInterestType}
+import com.knowledgebase.thrift.{AddInterestsRequest, GetInterestsRequest, GetInterestsResponse, InfoResource, KnowledgeBaseService, Resource, SimpleResponse, StockResource, Interest => ThriftInterest, InterestType => ThriftInterestType}
 import com.twitter.util.Future
 
 class KnowledgeBaseDomainService extends KnowledgeBaseService[Future] {
@@ -59,6 +48,15 @@ class KnowledgeBaseDomainService extends KnowledgeBaseService[Future] {
                         timestamp = Timestamp.valueOf(stockResource.time).getTime.toString
                       )
                     )
+                  )
+                ))
+            case PollInterestType =>
+              context.fiveThirtyEightClient.fetchPresidentPrimaryPollingData()
+                .map(resources => ThriftInterest(
+                  name = interest.name,
+                  interestType = ThriftInterestType.Poll,
+                  resources = resources.map(resource =>
+                    Resource PollResource resource
                   )
                 ))
             case InfoInterestType =>
