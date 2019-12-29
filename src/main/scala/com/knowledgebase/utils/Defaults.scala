@@ -5,6 +5,9 @@ object Defaults {
   val STOCK_PORT: Int = 443
   val STOCK_API_KEY: String = "4KGPZZEN7JFEN2ZH"
 
+  val FTE_HOST: String = "projects.fivethirtyeight.com"
+  val FTE_PORT: Int = 443
+
   val DB_PORT: Int = 3306
   val DB_USERNAME: String = "root"
   val DB_PASSWORD: String = "password"
