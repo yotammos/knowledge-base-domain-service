@@ -4,7 +4,7 @@ import com.knowledgebase.thrift.{PollEntry, PollResource}
 import com.knowledgebase.utils.Defaults.{FTE_HOST, FTE_PORT, POLLS_PAGE, POLLS_PRESIDENT_PRIMARY}
 import com.twitter.finagle.{Http, Service}
 import com.twitter.finagle.http.{Method, Request, Response, Status}
-import com.twitter.util.Future
+import com.twitter.util.{Future, Return, Throw, Try}
 
 trait FiveThirtyEightClientComponent {
 
@@ -26,6 +26,10 @@ trait FiveThirtyEightClientComponent {
         } else {
           throw new Exception("failed fetching polling data, error = " + response.getContentString())
         }
+      } handle {
+        case t: Throwable =>
+          println("failed getting polling data, error = " + t.getMessage)
+          throw t
       }
 
     private def buildPollingResources(content: String): Seq[PollResource] = {
@@ -37,33 +41,40 @@ trait FiveThirtyEightClientComponent {
         .values
         .toSeq
 
-      rawPolls.map(rawPoll => buildPollResource(rawPoll, colMap))
+      rawPolls.flatMap(rawPoll => buildPollResource(rawPoll, colMap) match {
+        case Return(resource) => Seq(resource)
+        case Throw(error) =>
+          println("failed parsing resource, error = " + error.getMessage)
+          Seq.empty[PollResource]
+      })
     }
 
-    private def buildPollResource(rawResource: Array[Array[String]], colMap: ColMap): PollResource = {
+    private def buildPollResource(rawResource: Array[Array[String]], colMap: ColMap): Try[PollResource] = {
       val firstLine = rawResource.head
-      PollResource(
-        cycle = firstLine(colMap.cycle).toInt,
-        pollster = firstLine(colMap.pollster),
-        fteGrade = firstLine(colMap.fteGrade),
-        sampleSize = firstLine(colMap.sampleSize).toInt,
-        officeType = firstLine(colMap.officeType),
-        startDate = firstLine(colMap.startDate),
-        endDate = firstLine(colMap.endDate),
-        stage = firstLine(colMap.stage),
-        state = {
-          val maybeState = firstLine(colMap.state)
-          if (maybeState.nonEmpty)
-            Option(maybeState)
-          else
-            None
-        },
-        entries = rawResource.map(line => PollEntry(
-          party = line(colMap.party),
-          candidate = line(colMap.candidate),
-          percentage = line(colMap.percentage).toDouble
-        ))
-      )
+      Try {
+        PollResource(
+          cycle = firstLine(colMap.cycle).toInt,
+          pollster = firstLine(colMap.pollster),
+          fteGrade = firstLine(colMap.fteGrade),
+          sampleSize = firstLine(colMap.sampleSize).toInt,
+          officeType = firstLine(colMap.officeType),
+          startDate = firstLine(colMap.startDate),
+          endDate = firstLine(colMap.endDate),
+          stage = firstLine(colMap.stage),
+          state = {
+            val maybeState = firstLine(colMap.state)
+            if (maybeState.nonEmpty)
+              Option(maybeState)
+            else
+              None
+          },
+          entries = rawResource.map(line => PollEntry(
+            party = line(colMap.party),
+            candidate = line(colMap.candidate),
+            percentage = line(colMap.percentage).toDouble
+          ))
+        )
+      }
     }
 
     private case class ColMap(cycle: Int, pollster: Int, fteGrade: Int, sampleSize: Int, officeType: Int, startDate: Int, endDate: Int, stage: Int, party: Int, candidate: Int, percentage: Int, state: Int, questionId: Int)
