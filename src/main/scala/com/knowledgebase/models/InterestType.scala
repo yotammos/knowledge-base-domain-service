@@ -12,9 +12,9 @@ object InterestType {
   private val INFO_INTEREST_TYPE = "InfoInterestType"
 
   def fromName(name: String): InterestType = name match {
-    case STOCK_INTEREST_TYPE => StockInterestType
-    case POLL_INTEREST_TYPE => PollInterestType
-    case INFO_INTEREST_TYPE | _ => InfoInterestType
+    case STOCK_INTEREST_TYPE | "Stock" => StockInterestType
+    case POLL_INTEREST_TYPE | "Poll" => PollInterestType
+    case INFO_INTEREST_TYPE | "Info" | _ => InfoInterestType
   }
 
   def toString(interestType: InterestType): String = interestType match {

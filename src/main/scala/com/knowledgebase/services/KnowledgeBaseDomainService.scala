@@ -4,7 +4,7 @@ import java.sql.Timestamp
 
 import com.knowledgebase.config.ComponentProvider
 import com.knowledgebase.models.{InfoInterestType, Interest, InterestType, PollInterestType, StockInterestType}
-import com.knowledgebase.thrift.{AddInterestsRequest, GetInterestsRequest, GetInterestsResponse, InfoResource, KnowledgeBaseService, Resource, SimpleResponse, StockResource, Interest => ThriftInterest, InterestType => ThriftInterestType}
+import com.knowledgebase.thrift.{AddInterestsRequest, GetInterestInfoResponse, GetInterestsResponse, InfoResource, InterestInfo, KnowledgeBaseService, RemoveInterestsRequest, Resource, SimpleRequest, SimpleResponse, StockResource, Interest => ThriftInterest, InterestType => ThriftInterestType}
 import com.twitter.util.Future
 
 class KnowledgeBaseDomainService extends KnowledgeBaseService[Future] {
@@ -12,6 +12,7 @@ class KnowledgeBaseDomainService extends KnowledgeBaseService[Future] {
   val context = new ComponentProvider
 
   override def addInterests(request: AddInterestsRequest): Future[SimpleResponse] = {
+    println("adding interests: request = " + request)
     context.knowledgeBaseDao.addInterestsByUserId(
       request.userId,
       request.interests
@@ -30,7 +31,25 @@ class KnowledgeBaseDomainService extends KnowledgeBaseService[Future] {
       )
   }
 
-  override def getInterests(request: GetInterestsRequest): Future[GetInterestsResponse] = {
+  override def getInterestInfo(request: SimpleRequest): Future[GetInterestInfoResponse] = {
+    println(s"getting interest info for user, userId = ${request.userId.value}")
+    context.knowledgeBaseDao.getInterestsByUserId(request.userId)
+      .map(info => GetInterestInfoResponse(
+        isSuccess = true,
+        None,
+        interestInfos = Option(info.map(interest => InterestInfo(
+            interest.name,
+            interest.interestType match {
+              case StockInterestType => ThriftInterestType.Stock
+              case PollInterestType => ThriftInterestType.Poll
+              case InfoInterestType | _ => ThriftInterestType.Info
+            }
+          )
+        ))
+      ))
+  }
+
+  override def getInterests(request: SimpleRequest): Future[GetInterestsResponse] = {
     println(s"getting interests for user, userId = ${request.userId.value}")
     context.knowledgeBaseDao.getInterestsByUserId(request.userId) flatMap { interests =>
         val interestsF = Future collect interests.map { interest =>
@@ -81,5 +100,20 @@ class KnowledgeBaseDomainService extends KnowledgeBaseService[Future] {
         )
       )
     }
+  }
+
+  override def removeInterests(request: RemoveInterestsRequest): Future[SimpleResponse] = {
+    context.knowledgeBaseDao.removeInterestsByIdAndName(
+      request.userId,
+      request.interestNames
+    )
+      .map(_ => SimpleResponse(isSuccess = true))
+  } handle {
+    case t: Throwable =>
+      println("Error in addInterests(), error = " + t.getMessage)
+      SimpleResponse(
+        isSuccess = false,
+        errorMessage = Option(t.getMessage)
+      )
   }
 }

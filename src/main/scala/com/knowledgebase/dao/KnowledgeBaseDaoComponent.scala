@@ -35,8 +35,16 @@ trait KnowledgeBaseDaoComponent {
     private def addInterestsByUserIdSql(userId: Long, interests: Seq[Interest]): String =
       s"insert into $INTERESTS_TABLE (${(INTEREST_COLS ++ Seq(USER_ID)).mkString(",")}) values ${interests.map(i => s"('${i.name}','${i.interestType}',$userId)").mkString(",")}"
 
+    private def removeInterestsByUserIdAndNameSql(userId: Long, names: Seq[String]): String =
+      s"delete from $INTERESTS_TABLE where $USER_ID = $userId and $INTEREST in (${names.map(name => s"'$name'") mkString ","})"
+
     def addInterestsByUserId(userId: UserId, interests: Seq[Interest]): Future[Unit] =
       client.modify(addInterestsByUserIdSql(userId.value, interests)) map {
+        status => println("number of affected rows = " + status.affectedRows)
+      }
+
+    def removeInterestsByIdAndName(userId: UserId, interestNames: Seq[String]): Future[Unit] =
+      client.modify(removeInterestsByUserIdAndNameSql(userId.value, interestNames)) map {
         status => println("number of affected rows = " + status.affectedRows)
       }
   }
