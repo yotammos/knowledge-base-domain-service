@@ -18,7 +18,8 @@ libraryDependencies ++= Seq(
   "com.twitter" %% "scrooge-core" % finagleVersion,
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
-  "io.circe" %% "circe-parser" % circeVersion
+  "io.circe" %% "circe-parser" % circeVersion,
+  "org.scalatest" %% "scalatest" % "3.1.0" % "test"
 )
 
 com.twitter.scrooge.ScroogeSBT.newSettings
